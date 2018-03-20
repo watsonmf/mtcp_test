@@ -38,10 +38,10 @@ io_module_func *current_iomodule_func = &dpdk_module_func;
 int
 SetInterfaceInfo(char* dev_name_list)
 {
-	int eidx = 0;
+	// int eidx = 0;
 	int i, j;
 
-	int set_all_inf = (strncmp(dev_name_list, ALL_STRING, sizeof(ALL_STRING))==0);
+	// int set_all_inf = (strncmp(dev_name_list, ALL_STRING, sizeof(ALL_STRING))==0);
 
 	TRACE_CONFIG("Loading interface setting\n");
 
@@ -119,28 +119,28 @@ struct eth_table
 	uint32_t ip_addr;
 };
 */
-	
+
 	/* HARD CODE DPDK PORT CONFIG -- CHANGE LATER */
-	
+
 	char* dpdk_dev_name = "dpdk0";
-	const char* dpdk_dev_ip_address = "10.19.19.119"
-	const char* dpdk_dev_netmask = "255.255.255.0"
-	
+	const char* dpdk_dev_ip_address = "10.19.19.119";
+	const char* dpdk_dev_netmask = "255.255.255.0";
+
 	CONFIG.eths_num = 1;
 	strcpy(CONFIG.eths[0].dev_name, dpdk_dev_name);
-	
-	unsigned char ip_addr[sizeof(struct in_addr)];
-	
-	inet_pton(AF_INET, dpdk_dev_ip_address, ip_addr);
-	CONFIG.eths[0].ip_addr = *(uint32_t *)&ip_addr;
-	
-	inet_pton(AF_INET, dpdk_dev_netmask, ip_addr);
-	CONFIG.eths[0].netmask = *(uint32_t *)&ip_addr;
-	
+
+	uint32_t ip_addr;
+
+	inet_pton(AF_INET, dpdk_dev_ip_address, &ip_addr);
+	CONFIG.eths[0].ip_addr = ip_addr;
+
+	inet_pton(AF_INET, dpdk_dev_netmask, &ip_addr);
+	CONFIG.eths[0].netmask = ip_addr;
+
 	memcpy(&CONFIG.eths[0].haddr[0], &ports_eth_addr[0], ETH_ALEN);
-	
+
 	CONFIG.eths[0].ifindex = 0;
-	
+
 	/* END */
 
 	num_queues = MIN(CONFIG.num_cores, MAX_CPUS);
