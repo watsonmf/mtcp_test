@@ -16,7 +16,7 @@
 /* for delay funcs */
 #include <rte_cycles.h>
 #include <rte_errno.h>
-#define ENABLE_STATS_IOCTL		1
+//#define ENABLE_STATS_IOCTL		1
 #ifdef ENABLE_STATS_IOCTL
 /* for close */
 #include <unistd.h>
@@ -286,19 +286,25 @@ int
 dpdk_send_pkts(struct mtcp_thread_context *ctxt, int ifidx)
 {
 	struct dpdk_private_context *dpc;
+#ifdef NETSTAT
 	mtcp_manager_t mtcp;
+#endif
 	int ret, i, portid = CONFIG.eths[ifidx].ifindex;
 
 	dpc = (struct dpdk_private_context *)ctxt->io_private_context;
+#ifdef NETSTAT
 	mtcp = ctxt->mtcp_manager;
+#endif
 	ret = 0;
 
 	/* if there are packets in the queue... flush them out to the wire */
 	if (dpc->wmbufs[ifidx].len >/*= MAX_PKT_BURST*/ 0) {
 		struct rte_mbuf **pkts;
 #ifdef ENABLE_STATS_IOCTL
-		struct stats_struct ss;
+#ifdef NETSTAT
 		struct rte_eth_stats stats;
+		struct stats_struct ss;
+#endif
 #endif /* !ENABLE_STATS_IOCTL */
 		int cnt = dpc->wmbufs[ifidx].len;
 		pkts = dpc->wmbufs[ifidx].m_table;
@@ -361,13 +367,17 @@ uint8_t *
 dpdk_get_wptr(struct mtcp_thread_context *ctxt, int ifidx, uint16_t pktsize)
 {
 	struct dpdk_private_context *dpc;
+#ifdef NETSTAT
 	mtcp_manager_t mtcp;
+#endif
 	struct rte_mbuf *m;
 	uint8_t *ptr;
 	int len_of_mbuf;
 
 	dpc = (struct dpdk_private_context *) ctxt->io_private_context;
+#ifdef NETSTAT
 	mtcp = ctxt->mtcp_manager;
+#endif
 
 	/* sanity check */
 	if (unlikely(dpc->wmbufs[ifidx].len == MAX_PKT_BURST))

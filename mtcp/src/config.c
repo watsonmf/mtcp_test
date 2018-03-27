@@ -500,7 +500,7 @@ LoadARPTable()
 	fclose(fc);
 	return 0;
 }
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/	
 static int
 SetMultiProcessSupport(char *multiprocess_details)
 {
@@ -508,20 +508,15 @@ SetMultiProcessSupport(char *multiprocess_details)
 	char *sample;
 	char *saveptr;
 
-	TRACE_CONFIG("Loading multi-process configuration\n");
-
 	saveptr = NULL;
 	sample = strtok_r(multiprocess_details, token, &saveptr);
 	if (sample == NULL) {
 		TRACE_CONFIG("No option for multi-process support given!\n");
 		return -1;
 	}
-	CONFIG.multi_process_curr_core = mystrtol(sample, 10);
-	
-	sample = strtok_r(NULL, token, &saveptr);
-	if (sample != NULL && !strcmp(sample, "master"))
-		CONFIG.multi_process_is_master = 1;
-	
+	CONFIG.multi_process = mystrtol(sample, 10);
+	TRACE_CONFIG("Loading multi-process configuration: %d\n",
+		     CONFIG.multi_process);	
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -613,7 +608,6 @@ ParseConfiguration(char *line)
 	} else if (strcmp(p, "num_mem_ch") == 0) {
 		CONFIG.num_mem_ch = mystrtol(q, 10);
 	} else if (strcmp(p, "multiprocess") == 0) {
-		CONFIG.multi_process = 1;
 		SetMultiProcessSupport(line + strlen(p) + 1);
 	} else {
 		TRACE_CONFIG("Unknown option type: %s\n", line);
@@ -644,8 +638,8 @@ LoadConfiguration(const char *fname)
 	CONFIG.num_cores = num_cpus;
 	CONFIG.max_concurrency = 100000;
 	CONFIG.max_num_buffers = 100000;
-	CONFIG.rcvbuf_size = 8192;
-	CONFIG.sndbuf_size = 8192;
+	CONFIG.rcvbuf_size = -1;
+	CONFIG.sndbuf_size = -1;
 	CONFIG.tcp_timeout = TCP_TIMEOUT;
 	CONFIG.tcp_timewait = TCP_TIMEWAIT;
 	CONFIG.num_mem_ch = 0;
@@ -679,6 +673,16 @@ LoadConfiguration(const char *fname)
 
 	fclose(fp);
 
+	/* if rcvbuf is set but sndbuf is not, sndbuf = rcvbuf */
+	if (CONFIG.sndbuf_size == -1 && CONFIG.rcvbuf_size != -1)
+		CONFIG.sndbuf_size = CONFIG.rcvbuf_size;
+	/* if sndbuf is set but rcvbuf is not, rcvbuf = sndbuf */
+	if (CONFIG.rcvbuf_size == -1 && CONFIG.sndbuf_size != -1)
+		CONFIG.rcvbuf_size = CONFIG.sndbuf_size;
+	/* if sndbuf & rcvbuf are not set, rcvbuf = sndbuf = 8192 */
+	if (CONFIG.rcvbuf_size == -1 && CONFIG.sndbuf_size == -1)
+		CONFIG.sndbuf_size = CONFIG.rcvbuf_size = 8192;
+	
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -693,8 +697,7 @@ PrintConfiguration()
 	TRACE_CONFIG("Maximum number of concurrency per core: %d\n", 
 			CONFIG.max_concurrency);
 	if (CONFIG.multi_process == 1) {
-		TRACE_CONFIG("Multi-process support is enabled and current core is: %d\n",
-			     CONFIG.multi_process_curr_core);
+		TRACE_CONFIG("Multi-process support is enabled\n");
 		if (CONFIG.multi_process_is_master == 1)
 			TRACE_CONFIG("Current core is master (for multi-process)\n");
 		else
