@@ -72,10 +72,10 @@ GetNumQueues()
 int
 SetInterfaceInfo(char* dev_name_list)
 {
-	int eidx = 0;
+	//int eidx = 0;
 	int i, j;
 
-	int set_all_inf = (strncmp(dev_name_list, ALL_STRING, sizeof(ALL_STRING))==0);
+	//int set_all_inf = (strncmp(dev_name_list, ALL_STRING, sizeof(ALL_STRING))==0);
 
 	TRACE_CONFIG("Loading interface setting\n");
 
@@ -147,7 +147,7 @@ SetInterfaceInfo(char* dev_name_list)
 
 		/* HARD CODE DPDK PORT CONFIG */
 		char* dpdk_dev_name = "dpdk0";
-		const char* dpdk_dev_ip_addresss = "10.19.19.119";
+		const char* dpdk_dev_ip_address = "10.19.19.119";
 		const char* dpdk_dev_netmask = "255.255.255.0";
 
 		CONFIG.eths_num = 1;
